@@ -1,5 +1,6 @@
+import contextlib
+import io
 import logging
-from io import StringIO
 from unittest.mock import patch
 
 import pytest
@@ -21,14 +22,12 @@ class StackOverflowMiddlewareTests(TestCase):
 
     @patch('soet.urls.urlpatterns', new=[path('', fake_view, name='fake_view')])
     @patch('django.conf.settings.DEBUG', new=True)
-    @patch('sys.stdout', new_callable=StringIO)
-    def test_user_not_found(self, mock_stdout):
+    def test_user_not_found(self):
 
         with pytest.raises(User.DoesNotExist):
-            with self.assertLogs(logging.getLogger('django.request'), level=logging.ERROR) as log:
-                self.client.get(reverse('soet:fake_view'))
-                assert 'Internal Server Error' in log.output[0]
-
-        output = mock_stdout.getvalue()
-        assert 'Question:' in output
-        assert 'Best Answer:' in output
+            with contextlib.redirect_stdout(io.StringIO()) as fake_stdout:
+                with self.assertLogs(logging.getLogger('django.request'), level=logging.ERROR) as fake_log:
+                    self.client.get(reverse('soet:fake_view'))
+                    assert 'Internal Server Error' in fake_log.output[0]
+                assert 'Question:' in fake_stdout
+                assert 'Best Anser:' in fake_stdout

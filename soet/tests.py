@@ -28,6 +28,6 @@ class StackOverflowMiddlewareTests(TestCase):
         with pytest.raises(User.DoesNotExist):
             self.client.get(reverse('soet:fake_view'))
 
-        assert fake_log.call_args[1]['extra']['status_code'] == 500
+        assert fake_log.call_args[0][1] == 'Internal Server Error'
         assert 'Question:' in fake_stdout.getvalue()
         assert 'Best Answer:' in fake_stdout.getvalue()

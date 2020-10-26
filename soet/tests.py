@@ -1,3 +1,4 @@
+import logging
 from io import StringIO
 from unittest.mock import patch
 
@@ -24,7 +25,10 @@ class StackOverflowMiddlewareTests(TestCase):
     def test_user_not_found(self, mock_stdout):
 
         with pytest.raises(User.DoesNotExist):
-            self.client.get(reverse('soet:fake_view'))
+            with self.assertLogs(logging.getLogger('django.request'), level=logging.ERROR) as log:
+                self.client.get(reverse('soet:fake_view'))
+                assert 'Internal Server Error' in log.output[0]
+
         output = mock_stdout.getvalue()
         assert 'Question:' in output
         assert 'Best Answer:' in output

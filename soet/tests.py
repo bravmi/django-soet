@@ -24,10 +24,10 @@ class StackOverflowMiddlewareTests(TestCase):
     @patch('django.conf.settings.DEBUG', new=True)
     def test_user_not_found(self):
 
-        with pytest.raises(User.DoesNotExist):
-            with contextlib.redirect_stdout(io.StringIO()) as fake_stdout:
-                with self.assertLogs(logging.getLogger('django.request'), level=logging.ERROR) as fake_log:
+        with contextlib.redirect_stdout(io.StringIO()) as fake_stdout:
+            with self.assertLogs(logging.getLogger('django.request'), level=logging.ERROR) as fake_log:
+                with pytest.raises(User.DoesNotExist):
                     self.client.get(reverse('soet:fake_view'))
-                    assert 'Internal Server Error' in fake_log.output[0]
-                assert 'Question:' in fake_stdout
-                assert 'Best Anser:' in fake_stdout
+                assert 'Internal Server Error' in fake_log.output[0]
+            assert 'Question:' in fake_stdout.getvalue()
+            assert 'Best Answer:' in fake_stdout.getvalue()

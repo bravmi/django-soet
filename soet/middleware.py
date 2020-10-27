@@ -7,14 +7,14 @@ from django.conf import settings
 GRID_LINE = '+' + (78 * '-') + '+'
 
 
-def break_string(string, every=76):
+def break_string(string: str, every=76) -> list:
     lines = []
     for i in range(0, len(string), every):
         lines.append(string[i : i + every])
     return lines
 
 
-def print_string(string):
+def print_string(string: str):
     lines = break_string(string)
     for line in lines:
         print('| {}'.format(line) + ((76 - len(line)) * ' ') + ' |')
@@ -37,9 +37,10 @@ class StackOverflowMiddleware:
         response = self.get_response(request)
         return response
 
-    def get_questions(self, intitle, tagged):
+    def get_questions(self, intitle: str, tagged: str) -> dict:
         query_params = {'tagged': tagged, 'intitle': intitle}
-        params = dict(list(self.default_params.items()) + list(query_params.items()))
+        params = self.default_params.copy()
+        params.update(query_params)
         r = requests.get(self.url, params=params, headers=self.headers)
         questions = r.json()
         return questions
@@ -53,12 +54,12 @@ class StackOverflowMiddleware:
 
             if len(questions['items']) == 0:
                 message = exception.message.split("'")[0]
-                intitle = '{}: {}'.format(exception.__class__.__name__, message)
+                intitle = f'{exception.__class__.__name__}: {message}'
                 questions = self.get_questions(intitle, 'python;django')
 
-                if len(questions['items']) == 0:
-                    intitle = exception.__class__.__name__
-                    questions = self.get_questions(intitle, 'django')
+            if len(questions['items']) == 0:
+                intitle = exception.__class__.__name__
+                questions = self.get_questions(intitle, 'django')
 
             count = 0
 
@@ -75,10 +76,7 @@ class StackOverflowMiddleware:
 
                     print(GRID_LINE)
 
-                    best_answer = None
-                    for answer in question['answers']:
-                        if best_answer is None or answer['score'] > best_answer['score']:
-                            best_answer = answer
+                    best_answer = max(question['answers'], key=lambda answer: answer['score'], default=None)
                     if best_answer:
                         answer_body = best_answer['body_markdown']
                         answer_lines = answer_body.splitlines()
@@ -110,8 +108,8 @@ class StackOverflowMiddleware:
                 print(GRID_LINE)
 
             print('\n' + GRID_LINE)
-            print_string('Exception: {}'.format(exception.__class__.__name__))
-            print_string('Message: {}'.format(exception.message))
+            print_string(f'Exception: {exception.__class__.__name__}')
+            print_string(f'Message: {exception.message}')
             print(GRID_LINE)
 
             print('')

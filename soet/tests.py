@@ -1,6 +1,6 @@
 import io
 import logging
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import pytest
 from django.contrib.auth.models import User
@@ -23,11 +23,11 @@ class StackOverflowMiddlewareTests(TestCase):
     @patch('django.conf.settings.DEBUG', new=True)
     @patch.object(logging.getLogger('django.request'), attribute='error')
     @patch('sys.stdout', new_callable=io.StringIO)
-    def test_user_not_found(self, fake_stdout, fake_log):
+    def test_user_not_found(self, fake_stdout: io.StringIO, mock_log: MagicMock):
 
         with pytest.raises(User.DoesNotExist):
             self.client.get(reverse('soet:fake_view'))
 
-        assert fake_log.call_args[0][1] == 'Internal Server Error'
+        assert mock_log.call_args[0][1] == 'Internal Server Error'
         assert 'Question:' in fake_stdout.getvalue()
         assert 'Best Answer:' in fake_stdout.getvalue()

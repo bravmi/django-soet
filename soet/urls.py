@@ -4,5 +4,5 @@ from . import views
 
 app_name = 'soet'
 urlpatterns = [
-    path('', views.fake_view, name='fake_view')
+    path('', views.index, name='index')
 ]

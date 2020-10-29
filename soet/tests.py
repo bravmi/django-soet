@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import path, reverse
 
+from . import urls
 from .middleware import StackOverflowMiddleware
 
 
@@ -14,12 +15,16 @@ def exception_view(request):
     User.objects.get(pk=1)
 
 
+urls.urlpatterns.extend(
+    [path('exception', exception_view, name='exception_view'),]
+)
+
+
 class StackOverflowMiddlewareTests(TestCase):
     def test_init(self):
         middleware = StackOverflowMiddleware('response')
         assert middleware.get_response == 'response'
 
-    @patch('soet.urls.urlpatterns', new=[path('', exception_view, name='exception_view')])
     @patch('django.conf.settings.DEBUG', new=True)
     @patch.object(logging.getLogger('django.request'), attribute='error')
     @patch('sys.stdout', new_callable=io.StringIO)
